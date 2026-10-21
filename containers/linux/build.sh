@@ -37,6 +37,12 @@ if [[ -f /run/hydra-build.env ]]; then
   cp /run/hydra-build.env .env.local
 fi
 
+node --input-type=module -e '
+  import { existsSync } from "node:fs";
+  import { validateBuildEnvironment } from "./src/shared/build-environment.ts";
+  if (existsSync(".env.local")) process.loadEnvFile(".env.local");
+  validateBuildEnvironment(process.env);
+'
 yarn install --frozen-lockfile --non-interactive
 yarn typecheck
 rm -rf -- dist
@@ -45,9 +51,18 @@ ELECTRON_RUN_AS_NODE=1 dist/linux-unpacked/hydralauncher -e \
   'require(process.argv[1]); console.log("Packaged native addon loads successfully");' \
   "$PWD/dist/linux-unpacked/resources/hydra-native/hydra-native.node"
 
+# Launch the actual AppImage, not just Electron in Node mode. Assert that the
+# local renderer and its preload bridge initialize on a virtual display.
+appimage="$(find dist -maxdepth 1 -name '*.AppImage' -print -quit)"
+if [[ -n "$appimage" ]]; then
+  xvfb-run -a node scripts/smoke-linux-startup.cjs "$appimage"
+else
+  xvfb-run -a node scripts/smoke-linux-startup.cjs dist/linux-unpacked/hydralauncher
+fi
+
 # Export packages and update metadata, not the multi-gigabyte unpacked tree.
 find dist -maxdepth 1 -type f \
   \( -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' \
-  -o -name '*.blockmap' -o -name '*.yml' \) \
+  -o -name '*.blockmap' -o -name 'latest*.yml' \) \
   -exec cp -f -- {} /output/ \;
 printf '\nLinux packages exported to the host output directory.\n'

@@ -26,12 +26,15 @@ To additionally produce DEB/RPM packages:
 Use only client build settings in the environment file. The Supabase service-role
 key belongs on the server. `.env.local` is ignored by Git, excluded from the image
 build context, and mounted read-only into the build container. Omit `--env-file`
-for an unconfigured upstream build. Build commands explicitly disable publishing.
+to use the public Hydra defaults in `.env.example` with Supabase disabled.
+Build commands validate required endpoints before compiling and explicitly disable publishing.
 
 The source checkout is mounted read-only. A snapshot is copied into a Podman
 volume, excluding host dependencies, native outputs and generated files. Cargo,
 Yarn, Electron and compiler output caches remain in checkout-specific volumes.
-Only package files are copied back to the host. The first build downloads the
+Only package files are copied back to the host. Before export, the builder launches
+the actual AppImage on a virtual display and checks that the local renderer and
+preload bridge initialize without an uncaught startup exception. The first build downloads the
 image/toolchains and compiles native code; later builds reuse caches.
 
 The image deliberately contains MinGW and the Rust Windows GNU target: Hydra's

@@ -1,3 +1,4 @@
+import { validateBuildEnvironment } from "./src/shared/build-environment";
 import react from "@vitejs/plugin-react";
 import {
   defineConfig,
@@ -10,7 +11,8 @@ import svgr from "vite-plugin-svgr";
 import { scopeBigPictureCss } from "./src/big-picture/vite-scope-big-picture-css";
 
 export default defineConfig(({ mode }) => {
-  loadEnv(mode);
+  const environment = loadEnv(mode);
+  validateBuildEnvironment({ ...environment, ...process.env });
 
   return {
     main: {

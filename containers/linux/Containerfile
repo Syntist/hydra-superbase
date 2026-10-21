@@ -17,6 +17,10 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
     && rustup target add x86_64-pc-windows-gnu \
     && chmod -R a+rX /opt/rustup /opt/cargo
 
+# Run a real packaged-app startup check on a virtual display before export.
+RUN apt-get update && apt-get install -y --no-install-recommends xvfb xauth \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY build.sh /usr/local/bin/hydra-container-build
 RUN chmod 755 /usr/local/bin/hydra-container-build
 ENTRYPOINT ["/usr/local/bin/hydra-container-build"]

@@ -51,7 +51,8 @@ args=(run --rm --userns=keep-id --user "$(id -u):$(id -g)"
 if [[ -n "$env_file" ]]; then
   args+=(--volume "$env_file:/run/hydra-build.env:ro")
 else
-  printf 'No --env-file selected; optional Supabase build settings will be disabled.\n'
+  printf 'Using public Hydra defaults from .env.example; Supabase is disabled.\n'
+  args+=(--volume "$project_dir/.env.example:/run/hydra-build.env:ro")
 fi
 podman "${args[@]}" "$image" "${targets[@]}"
 printf '\nPackages: %s\n' "$output_dir"
