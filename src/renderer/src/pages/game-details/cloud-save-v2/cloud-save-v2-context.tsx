@@ -18,6 +18,7 @@ import {
   isCloudSaveV2Eligible,
 } from "@shared";
 import { Button, ConfirmationModal, Modal } from "@renderer/components";
+import { isSupabaseCloudConfigured } from "@renderer/helpers/supabase-cloud";
 import { gameDetailsContext } from "@renderer/context";
 import { useToast, useUserDetails } from "@renderer/hooks";
 import { useSubscription } from "@renderer/hooks/use-subscription";
@@ -190,7 +191,8 @@ export function CloudSaveV2Provider({
   } = useContext(gameDetailsContext);
   const cloudSaveAccessAction = getCloudSaveAccessAction(
     Boolean(userDetails),
-    hasActiveSubscription
+    hasActiveSubscription,
+    isSupabaseCloudConfigured
   );
   const canUseCloudSaves = cloudSaveAccessAction === "open";
   const isV2Eligible = isCloudSaveV2Eligible(shop, game?.platform);

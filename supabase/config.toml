@@ -1,0 +1,2 @@
+[functions.hydra-auth-bridge]
+verify_jwt = false

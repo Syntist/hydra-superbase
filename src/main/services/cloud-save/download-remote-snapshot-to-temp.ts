@@ -1,4 +1,3 @@
-import { HydraApi } from "@main/services/hydra-api";
 import { SystemPath } from "@main/services/system-path";
 import type {
   DownloadedRestoreFile,
@@ -11,6 +10,7 @@ import {
   cloudSaveFileKey,
   validateRestoreDownloadUrls,
 } from "./cloud-save-contract";
+import { CloudSaveRemote } from "./cloud-save-remote";
 import {
   mapWithConcurrency,
   MAX_CONCURRENT_RESTORE_OPERATIONS,
@@ -24,11 +24,7 @@ export const downloadRemoteSnapshotToTemp = async (
 ): Promise<DownloadedRestoreFile[]> => {
   if (requestedFiles?.length === 0) return [];
   const files = validateRestoreDownloadUrls(
-    await HydraApi.get<unknown>(
-      "/profile/cloud-saves/snapshot-download-urls",
-      { snapshotId },
-      { needsAuth: true, needsSubscription: true }
-    )
+    await CloudSaveRemote.getSnapshotDownloadUrls(snapshotId)
   );
   const requestedById = requestedFiles
     ? new Map(

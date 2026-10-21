@@ -29,3 +29,6 @@ TO-DO.md
 .cache/
 native/torrent-bridge/build/
 native/torrent-bridge/vcpkg_installed/
+
+# Local Supabase CLI project state
+supabase/.temp/

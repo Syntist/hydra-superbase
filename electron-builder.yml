@@ -18,6 +18,8 @@ files:
   - "!legendary/**"
   - "!resources/legendary/**"
   - "!native/torrent-bridge/**"
+  - "!.venv/**"
+  - "!.venv"
   - "!**/.vscode/*"
   - "!src/*"
   - "!native/hydra-native/target"

@@ -1,3 +1,4 @@
+import { isSupabaseCloudConfigured } from "@renderer/helpers/supabase-cloud";
 import type { LibraryGame } from "@types";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -137,7 +138,7 @@ export function GameSettingsModal({
   const shouldShowCloudV2Tab = shouldShowCloudSaveV2Tab(
     game.shop,
     isSignedIn,
-    hasActiveSubscription,
+    hasActiveSubscription || isSupabaseCloudConfigured,
     game.platform
   );
   const shouldShowLegacyCloudTab = shouldShowLegacyCloudSaveTab(

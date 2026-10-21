@@ -1,3 +1,4 @@
+import { isSupabaseCloudConfigured } from "@renderer/helpers/supabase-cloud";
 import {
   createContext,
   useCallback,
@@ -170,7 +171,9 @@ export function BigPictureCloudSaveProvider({
   const { userDetails, hasActiveSubscription } = useUserDetails();
   const { showErrorToast, showSuccessToast, showWarningToast } =
     useBigPictureToast();
-  const canUseCloudSaves = Boolean(userDetails) && hasActiveSubscription;
+  const canUseCloudSaves =
+    Boolean(userDetails) &&
+    (hasActiveSubscription || isSupabaseCloudConfigured);
   const eligible = isCloudSaveV2Eligible(shop, platform);
   const canCheckEmulator = eligible && canUseCloudSaves;
   const canCheckCloudSaves = canCheckEmulator && hasExecutablePath;

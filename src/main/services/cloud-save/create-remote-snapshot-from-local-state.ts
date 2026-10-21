@@ -1,4 +1,3 @@
-import { HydraApi } from "@main/services/hydra-api";
 import type {
   CloudSaveUploadProgress,
   CommitSnapshotRequest,
@@ -21,6 +20,7 @@ import {
   isNonEmptyString,
 } from "./cloud-save-contract";
 import { saveCloudSaveSyncAnchor } from "./sync-anchor";
+import { CloudSaveRemote } from "./cloud-save-remote";
 import {
   isCloudSaveCommitTransportFailure,
   shouldReprepareCloudSaveSnapshot,
@@ -86,11 +86,7 @@ const commitPendingSnapshot = async (pendingSnapshotId: string) => {
   const request: CommitSnapshotRequest = { pendingSnapshotId };
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
-      response = await HydraApi.post<unknown>(
-        "/profile/cloud-saves/commit-snapshot",
-        request,
-        { needsAuth: true, needsSubscription: true }
-      );
+      response = await CloudSaveRemote.commitSnapshot(request);
       break;
     } catch (error) {
       if (attempt === 0 && isCloudSaveCommitTransportFailure(error)) continue;

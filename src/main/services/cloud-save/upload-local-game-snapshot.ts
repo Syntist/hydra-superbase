@@ -1,6 +1,6 @@
 import os from "node:os";
 
-import { HydraApi } from "@main/services/hydra-api";
+import { SupabaseCloud } from "@main/services/supabase-cloud";
 import type {
   CloudSaveUploadProgress,
   GameShop,
@@ -13,6 +13,7 @@ import type {
 import { NativeAddon } from "../native-addon";
 import { buildLocalGameSnapshotContext } from "./build-local-game-snapshot";
 import { cloudSaveFileKey } from "./cloud-save-contract";
+import { CloudSaveRemote } from "./cloud-save-remote";
 import { buildPrepareSnapshotPayload } from "./prepare-snapshot-payload";
 import {
   groupUploadsByHash,
@@ -62,8 +63,7 @@ export const uploadLocalGameSnapshot = async (
   assertCloudSaveUploadWithinLimits(proposalFiles);
 
   const response = validatePrepareResponse(
-    await HydraApi.post<unknown>(
-      "/profile/cloud-saves/prepare-snapshot",
+    await CloudSaveRemote.prepareSnapshot(
       buildPrepareSnapshotPayload({
         shop,
         objectId,
@@ -75,8 +75,7 @@ export const uploadLocalGameSnapshot = async (
         customPathRawPaths: proposalCustomPathRawPaths,
         variants: proposalVariants,
         files: proposalFiles,
-      }),
-      { needsAuth: true, needsSubscription: true }
+      })
     )
   );
   if (response.snapshotHash !== aggregateHash) {
@@ -166,12 +165,19 @@ export const uploadLocalGameSnapshot = async (
       emitCurrentProgress();
 
       try {
-        await NativeAddon.uploadLocalSaveBlob(
-          source.absolutePath,
-          file.uploadUrl,
-          file.requiredHeaders["Content-Length"],
-          file.requiredHeaders["x-amz-checksum-sha256"]
-        );
+        if (CloudSaveRemote.usesSupabase()) {
+          await SupabaseCloud.uploadSnapshotBlob(
+            source.absolutePath,
+            source.hash
+          );
+        } else {
+          await NativeAddon.uploadLocalSaveBlob(
+            source.absolutePath,
+            file.uploadUrl,
+            file.requiredHeaders["Content-Length"],
+            file.requiredHeaders["x-amz-checksum-sha256"]
+          );
+        }
       } catch (error) {
         hasFailed = true;
         activeFiles.delete(uploadIndex);

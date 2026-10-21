@@ -28,6 +28,7 @@ import { HowLongToBeatSection } from "./how-long-to-beat-section";
 import { LaunchboxDetailsSection } from "./launchbox-details-section";
 import { SidebarSection } from "../sidebar-section/sidebar-section";
 import { buildGameAchievementPath } from "@renderer/helpers";
+import { isSupabaseCloudConfigured } from "@renderer/helpers/supabase-cloud";
 import { useSubscription } from "@renderer/hooks/use-subscription";
 import { RetroAchievementsConnectBanner } from "@renderer/components/retro-achievements-connect-banner/retro-achievements-connect-banner";
 import "./sidebar.scss";
@@ -251,16 +252,18 @@ export function Sidebar() {
           <ul className="list">
             <RetroAchievementsConnectBanner />
 
-            {!hasActiveSubscription && achievementsCount > 0 && (
-              <button
-                type="button"
-                className="subscription-required-button"
-                onClick={() => showHydraCloudModal("achievements")}
-              >
-                <AlertIcon size={14} />
-                <span>{t("achievements_not_sync")}</span>
-              </button>
-            )}
+            {!hasActiveSubscription &&
+              !isSupabaseCloudConfigured &&
+              achievementsCount > 0 && (
+                <button
+                  type="button"
+                  className="subscription-required-button"
+                  onClick={() => showHydraCloudModal("achievements")}
+                >
+                  <AlertIcon size={14} />
+                  <span>{t("achievements_not_sync")}</span>
+                </button>
+              )}
 
             {(achievements ?? []).slice(0, 4).map((achievement) => (
               <li key={achievement.displayName}>

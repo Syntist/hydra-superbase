@@ -1,3 +1,4 @@
+import { SupabaseCloud } from "./supabase-cloud";
 import { clearGamesPlaytimeState } from "./game-running-state";
 import { clearStaleEpicImports } from "./epic/import-cleanup";
 import axios, { AxiosError, AxiosInstance } from "axios";
@@ -152,6 +153,15 @@ export class HydraApi {
     return this.userAuth.authToken !== "";
   }
 
+  private static async syncSupabaseCloudSession() {
+    if (!this.userAuth.authToken) return;
+    try {
+      await SupabaseCloud.authenticateWithHydraToken(this.userAuth.authToken);
+    } catch (error) {
+      logger.error("Failed to authenticate Supabase Cloud session", error);
+    }
+  }
+
   public static hasActiveSubscription() {
     const expiresAt = new Date(this.userAuth.subscription?.expiresAt ?? 0);
     return expiresAt > new Date();
@@ -212,6 +222,9 @@ export class HydraApi {
     const { accessToken, expiresIn, refreshToken, workwondersJwt } = jsonData;
 
     const generation = this.authContexts.invalidate();
+    const cloudSignOut = SupabaseCloud.signOut().catch((error) =>
+      logger.error("Failed to clear Supabase Cloud session", error)
+    );
     clearGamesPlaytimeState();
     this.userAuth = {
       authToken: "",
@@ -219,6 +232,9 @@ export class HydraApi {
       expirationTimestamp: 0,
       subscription: null,
     };
+
+    await cloudSignOut;
+    if (generation !== this.authContexts.generation) return;
 
     const now = new Date();
 
@@ -284,6 +300,9 @@ export class HydraApi {
     });
     if (generation !== this.authContexts.generation) return;
 
+    await this.syncSupabaseCloudSession();
+    if (generation !== this.authContexts.generation) return;
+
     const { groupedSouvenirWorker } = await import(
       "./achievements/grouped-souvenir-worker"
     );
@@ -314,6 +333,9 @@ export class HydraApi {
 
   static async handleSignOut(cleanupUserData?: () => Promise<void>) {
     const generation = this.authContexts.invalidate();
+    const cloudSignOut = SupabaseCloud.signOut().catch((error) =>
+      logger.error("Failed to clear Supabase Cloud session", error)
+    );
     clearGamesPlaytimeState();
     this.userAuth = {
       authToken: "",
@@ -321,6 +343,9 @@ export class HydraApi {
       expirationTimestamp: 0,
       subscription: null,
     };
+
+    await cloudSignOut;
+    if (generation !== this.authContexts.generation) return;
 
     await clearStaleEpicImports(
       null,
@@ -473,6 +498,7 @@ export class HydraApi {
     const updatedUserData = await getUserData();
     if (generation !== this.authContexts.generation) return;
     this.updateUserSubscription(updatedUserData?.subscription);
+    await this.syncSupabaseCloudSession();
   }
 
   private static sendSignOutEvent() {
@@ -587,6 +613,9 @@ export class HydraApi {
       );
 
       const signedOutGeneration = this.authContexts.invalidate();
+      const cloudSignOut = SupabaseCloud.signOut().catch((error) =>
+        logger.error("Failed to clear Supabase Cloud session", error)
+      );
       clearGamesPlaytimeState();
       this.userAuth = {
         authToken: "",
@@ -594,6 +623,8 @@ export class HydraApi {
         refreshToken: "",
         subscription: null,
       };
+      await cloudSignOut;
+      if (signedOutGeneration !== this.authContexts.generation) throw err;
       await clearStaleEpicImports(
         null,
         () => signedOutGeneration === this.authContexts.generation

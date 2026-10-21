@@ -28,6 +28,7 @@ import { ScreenshotService } from "../screenshot";
 import { PendingAchievementSouvenirStore } from "./pending-achievement-souvenir-store";
 import { PendingGroupedSouvenirStore } from "./grouped-souvenir-store";
 import { groupedSouvenirWorker } from "./grouped-souvenir-worker";
+import { SupabaseCloud } from "../supabase-cloud";
 import { launchedGamePids } from "../launched-game-pids";
 import { Wine } from "../wine";
 
@@ -348,7 +349,8 @@ const mergeAchievementsLocally = async (
   const achievementsToSync = mergedLocalAchievements;
 
   const shouldSyncWithRemote =
-    Boolean(game.remoteId) && AchievementWatcherManager.hasFinishedPreSearch;
+    (SupabaseCloud.isConfigured() || Boolean(game.remoteId)) &&
+    AchievementWatcherManager.hasFinishedPreSearch;
 
   await saveAchievementsInMemory(
     game.objectId,
@@ -359,16 +361,25 @@ const mergeAchievementsLocally = async (
   );
   if (!current()) throw new Error("achievement-sync-context-changed");
   if (shouldSyncWithRemote) {
-    const context = HydraApi.getAuthContext();
-    if (context)
-      await achievementSyncWorker.enqueue({
-        context,
-        gameKey,
-        remoteId: game.remoteId!,
-        shop: game.shop,
-        objectId: game.objectId,
-        achievements: achievementsToSync,
-      });
+    if (SupabaseCloud.isConfigured()) {
+      await SupabaseCloud.syncAchievements(
+        game.shop,
+        game.objectId,
+        achievementsToSync
+      );
+      if (!current()) throw new Error("achievement-sync-context-changed");
+    } else {
+      const context = HydraApi.getAuthContext();
+      if (context)
+        await achievementSyncWorker.enqueue({
+          context,
+          gameKey,
+          remoteId: game.remoteId!,
+          shop: game.shop,
+          objectId: game.objectId,
+          achievements: achievementsToSync,
+        });
+    }
   }
 
   if (pendingGroupedSouvenir) void groupedSouvenirWorker.trigger();

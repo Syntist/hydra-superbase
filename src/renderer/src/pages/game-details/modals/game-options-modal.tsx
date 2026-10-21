@@ -19,6 +19,7 @@ import {
   getOfficialStoreMembers,
   MANGOHUD_SITE_URL,
 } from "@shared";
+import { isSupabaseCloudConfigured } from "@renderer/helpers/supabase-cloud";
 
 import type {
   CreateSteamShortcutOptions,
@@ -261,7 +262,8 @@ export function GameOptionsModal({
   const { showHydraCloudModal } = useSubscription();
   const cloudSaveAccessAction = getCloudSaveAccessAction(
     Boolean(userDetails),
-    hasActiveSubscription
+    hasActiveSubscription,
+    isSupabaseCloudConfigured
   );
   const cloudSaveSettings = getCloudSaveVisibility(
     game.shop,
@@ -270,7 +272,7 @@ export function GameOptionsModal({
   const { showV2: showCloudSaveV2Settings, legacyPurpose } = cloudSaveSettings;
   const showLegacyCloudSaveSettings = isLegacyCloudSaveSettingsAvailable(
     cloudSaveSettings,
-    hasActiveSubscription,
+    hasActiveSubscription || isSupabaseCloudConfigured,
     artifacts.length
   );
   const userPreferences = useAppSelector(

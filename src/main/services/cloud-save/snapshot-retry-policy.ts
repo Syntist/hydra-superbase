@@ -15,6 +15,13 @@ export const shouldReprepareCloudSaveSnapshot = (error: unknown) => {
   ) {
     return true;
   }
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    error.message === "game/cloud-save-pending-snapshot-incomplete"
+  )
+    return true;
   if (!isAxiosError(error)) return false;
   const payload = JSON.stringify(error.response?.data ?? "");
   return (
@@ -25,7 +32,12 @@ export const shouldReprepareCloudSaveSnapshot = (error: unknown) => {
 };
 
 export const shouldRetryCloudSaveConflict = (error: unknown, attempt: number) =>
-  attempt === 0 && isAxiosError(error) && error.response?.status === 409;
+  attempt === 0 &&
+  ((isAxiosError(error) && error.response?.status === 409) ||
+    (typeof error === "object" &&
+      error !== null &&
+      "message" in error &&
+      error.message === "cloud_save_snapshot_version_conflict"));
 
 export const shouldRetryCloudSaveStateChange = (attempt: number) =>
   attempt === 0;

@@ -86,3 +86,27 @@ describe("Cloud Save snapshot retry policy", () => {
     assert.equal(shouldRetryCloudSaveStateChange(1), false);
   });
 });
+
+it("retries Supabase version conflicts once and leaves other failures alone", () => {
+  for (const error of [
+    new Error("cloud_save_snapshot_version_conflict"),
+    { message: "cloud_save_snapshot_version_conflict" },
+  ]) {
+    assert.equal(shouldRetryCloudSaveConflict(error, 0), true);
+    assert.equal(shouldRetryCloudSaveConflict(error, 1), false);
+  }
+  for (const error of [
+    null,
+    {},
+    { message: "permission denied" },
+    new Error("network"),
+  ]) {
+    assert.equal(shouldRetryCloudSaveConflict(error, 0), false);
+  }
+  assert.equal(
+    shouldReprepareCloudSaveSnapshot({
+      message: "game/cloud-save-pending-snapshot-incomplete",
+    }),
+    true
+  );
+});

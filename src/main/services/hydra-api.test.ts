@@ -128,6 +128,8 @@ async function fixture(t: TestContext, apiUrl = "http://localhost:3000") {
     await fs.rm(root, { recursive: true, force: true });
   });
   const stubs: Record<string, string> = {
+    "./supabase-cloud":
+      "export const SupabaseCloud = { authenticateWithHydraToken: async () => false, signOut: async () => {} };",
     axios:
       "import axios from 'real-axios'; export { AxiosError } from 'real-axios'; export default { create: options => axios.create({ ...options, adapter: harness.adapter }) };",
     "./window-manager": "export const WindowManager = harness.WindowManager;",
