@@ -29,6 +29,13 @@
 
 Please, refer to our Documentation pages: [docs.hydralauncher.gg](https://docs.hydralauncher.gg/getting-started)
 
+### Container builds on Linux
+
+To build an AppImage without installing Node/Rust dependencies on your host, run
+`./scripts/build-linux-podman.sh --env-file .env.local` with rootless Podman.
+Packages are exported to `dist/container-linux/`.
+See [Linux container builds](docs/linux-container-build.md) for setup and rebasing.
+
 ### Local development requirements
 
 - Node.js + Yarn

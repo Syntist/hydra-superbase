@@ -32,3 +32,6 @@ native/torrent-bridge/vcpkg_installed/
 
 # Local Supabase CLI project state
 supabase/.temp/
+
+# Generated standalone patch export
+/hydra-supabase-latest.patch

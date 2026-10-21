@@ -33,7 +33,8 @@
     "build:mac": "npm run build:native && electron-vite build && electron-builder --mac",
     "build:linux": "npm run build:native && electron-vite build && electron-builder --linux",
     "dev:big-picture": "vite dev src/big-picture",
-    "prepare": "husky"
+    "prepare": "husky",
+    "build:linux:podman": "bash scripts/build-linux-podman.sh"
   },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^1.8.1",
